@@ -2,6 +2,7 @@
 import { Box, TextField } from "@mui/material"
 import { useState, useEffect, useCallback } from "react"
 import styles from './page.module.css'
+import {listCompaniesByIdOrCode} from "@/app/apis/companies"
 export default function StockListPage() {
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearchValue, setDebouncedSearchValue] = useState('')
@@ -28,10 +29,13 @@ export default function StockListPage() {
     console.log('输入值实时变化：', value)
   }
 
-  const handleSearch = useCallback((searchTerm: string) => {
-    console.log('执行搜索：', searchTerm)
-    // 在这里调用 API 进行搜索
-    // fetchStocks(searchTerm)
+  const handleSearch = useCallback( async(searchTerm: string) => {
+
+    try {
+        const data = await listCompaniesByIdOrCode({ keyWord: searchTerm, page: 1, pageSize: 10 })
+    } catch (error) {
+        console.error('listCompaniesByIdOrCode:', error)
+    }
   }, [])
 
   return (
@@ -45,11 +49,6 @@ export default function StockListPage() {
           value={searchValue}
           autoFocus
           onChange={handleSearchChange}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              handleSearch(searchValue)
-            }
-          }}
           placeholder="enter stock code or name"
           fullWidth
           size="small"
