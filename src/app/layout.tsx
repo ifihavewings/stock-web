@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppShell from "./components/AppShell";
+import { ThemeProvider } from './theme/ThemeProvider'
+import StyledJsxRegistry from './lib/registry'
 
 export const metadata: Metadata = {
   title: "STOCK ANALYZE PLATFORM",
@@ -15,9 +17,13 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body>
-        <AppShell>
-          {children}
-        </AppShell>
+        <StyledJsxRegistry>
+          <ThemeProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+          </ThemeProvider>
+        </StyledJsxRegistry>
       </body>
     </html>
   );
