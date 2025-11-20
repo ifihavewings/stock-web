@@ -1,0 +1,118 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 头部 */
+.top {
+    width: 100%;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-bottom: 1px solid #eee;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logoSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.icon {
+    font-size: 60px !important;
+    margin-right: 20px;
+    transition: all 0.8s ease;
+    cursor: pointer;
+    animation: breathe 10s ease-in-out infinite;
+    color: #1976d2;
+}
+
+.icon:hover {
+    transform: scale(1.1);
+    animation-play-state: paused;
+}
+
+/* 呼吸缩放动画 */
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.brandInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    font-size: 1.8rem;
+    margin: 0 0 5px 0;
+    color: #333;
+    font-weight: bold;
+}
+
+.description {
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+}
+
+/* 主体区域 */
+.bottom {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 100px);
+}
+
+.bottomLeft {
+    width: 250px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.bottomRight {
+    flex: 1;
+    overflow: auto;
+    background-color: white;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .icon {
+        font-size: 40px !important;
+        margin-right: 15px;
+    }
+    
+    .title {
+        font-size: 1.4rem;
+    }
+    
+    .description {
+        font-size: 0.9rem;
+    }
+    
+    .bottomLeft {
+        width: 200px;
+    }
+    
+    .top {
+        height: 80px;
+    }
+    
+    .bottom {
+        height: calc(100vh - 80px);
+    }
+}

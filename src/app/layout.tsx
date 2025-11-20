@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AppShell from "./components/AppShell";
 
 export const metadata: Metadata = {
-  title: "股票数据系统",
-  description: "股票数据查询和分析系统",
+  title: "STOCK ANALYZE PLATFORM",
+  description: "A platform for analyzing stock data efficiently.",
 };
 
 export default function RootLayout({
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body>
-        {children}
+        <AppShell>
+          {children}
+        </AppShell>
       </body>
     </html>
   );
