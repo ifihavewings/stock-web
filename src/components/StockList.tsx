@@ -2,10 +2,13 @@ import { DataGrid, GridColDef, GridActionsCellItem, GridRenderCellParams, GridRo
 import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
+import { useState } from 'react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
 // 定义股票数据类型
 interface StockData {
@@ -40,6 +43,9 @@ interface StockListProps {
 export default function StockList(props: StockListProps) {
     const { tableData, pagination, loading = false, onPageChange } = props;
 
+    // 收藏状态管理 - 使用Set存储已收藏的股票代码
+    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
     // 工具函数
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
     const formatShares = (shares: string | null) => {
@@ -60,6 +66,21 @@ export default function StockList(props: StockListProps) {
     const handleAnalyze = (stockCode: string) => console.log('分析:', stockCode);
     const handleEdit = (stockCode: string) => console.log('编辑:', stockCode);
     const handleDelete = (stockCode: string) => console.log('删除:', stockCode);
+    
+    // 收藏处理函数
+    const handleFavorite = (stockCode: string) => {
+        setFavorites(prev => {
+            const newFavorites = new Set(prev);
+            if (newFavorites.has(stockCode)) {
+                newFavorites.delete(stockCode);
+                console.log('取消收藏:', stockCode);
+            } else {
+                newFavorites.add(stockCode);
+                console.log('添加收藏:', stockCode);
+            }
+            return newFavorites;
+        });
+    };
 
     // 列配置
     const columns: GridColDef[] = [
@@ -150,8 +171,17 @@ export default function StockList(props: StockListProps) {
             field: 'actions',
             type: 'actions',
             headerName: '操作',
-            width: 180,
+            width: 220, // 增加宽度以容纳新按钮
             getActions: (params: GridRowParams) => [
+                <GridActionsCellItem
+                    key="favorite"
+                    icon={favorites.has(params.row.stockCode) ? 
+                        <FavoriteIcon sx={{ color: 'error.main' }} /> : 
+                        <FavoriteBorderIcon />
+                    }
+                    label={favorites.has(params.row.stockCode) ? "取消收藏" : "添加收藏"}
+                    onClick={() => handleFavorite(params.row.stockCode)}
+                />,
                 <GridActionsCellItem
                     key="view"
                     icon={<VisibilityIcon />}
@@ -163,18 +193,6 @@ export default function StockList(props: StockListProps) {
                     icon={<TrendingUpIcon />}
                     label="股票分析"
                     onClick={() => handleAnalyze(params.row.stockCode)}
-                />,
-                <GridActionsCellItem
-                    key="edit"
-                    icon={<EditIcon />}
-                    label="编辑"
-                    onClick={() => handleEdit(params.row.stockCode)}
-                />,
-                <GridActionsCellItem
-                    key="delete"
-                    icon={<DeleteIcon />}
-                    label="删除"
-                    onClick={() => handleDelete(params.row.stockCode)}
                 />,
             ],
         },
@@ -220,6 +238,31 @@ export default function StockList(props: StockListProps) {
                     border: 0,
                     '& .MuiDataGrid-cell:hover': {
                         color: 'primary.main',
+                    },
+                    // 修复复选框与行内文本的垂直对齐
+                    '& .MuiDataGrid-checkboxInput': {
+                        padding: '0',
+                        '& svg': {
+                            fontSize: '1.2rem',
+                            verticalAlign: 'middle',
+                        }
+                    },
+                    '& .MuiDataGrid-columnHeaderCheckbox': {
+                        padding: '0',
+                        '& .MuiCheckbox-root': {
+                            padding: '8px',
+                        }
+                    },
+                    // 统一所有单元格的垂直对齐方式
+                    '& .MuiDataGrid-cell': {
+                        display: 'flex',
+                        alignItems: 'center',
+                        lineHeight: 'normal',
+                    },
+                    '& .MuiDataGrid-columnHeader': {
+                        display: 'flex',
+                        alignItems: 'center',
+                        lineHeight: 'normal',
                     },
                 }}
             />
