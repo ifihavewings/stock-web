@@ -107,15 +107,14 @@ export default function StockListPage() {
       height: '100%'
     }}>
         <TextField 
-          label="智能搜索" 
+          label="KeyWord" 
           variant="outlined" 
           value={searchValue}
           autoFocus
           onChange={handleSearchChange}
-          placeholder="输入股票代码（如：000001）或公司名称（如：平安）"
+          placeholder="stock name or code"
           fullWidth
           size="small"
-          helperText="支持股票代码和公司名称模糊搜索，结果按相关性排序"
         />
 
         <Box sx={{ mt: 2 }}>
