@@ -25,10 +25,20 @@ interface StockData {
 
 interface StockListProps {
     tableData: StockData[];
+    pagination?: {
+        currentPage: string | number;
+        pageSize: string | number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+    };
+    loading?: boolean;
+    onPageChange?: (page: number, pageSize: number) => void;
 }
 
 export default function StockList(props: StockListProps) {
-    const { tableData } = props;
+    const { tableData, pagination, loading = false, onPageChange } = props;
 
     // 工具函数
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
@@ -178,18 +188,31 @@ export default function StockList(props: StockListProps) {
         ...item
     }))
 
-    const paginationModel = { page: 0, pageSize: 10 };
+    // 分页状态，使用后端分页信息
+    const currentPage = pagination ? Number(pagination.currentPage) - 1 : 0 // DataGrid 使用 0 基础页码
+    const currentPageSize = pagination ? Number(pagination.pageSize) : 10
+    const rowCount = pagination ? pagination.total : rows.length
+
+    // 处理分页变化
+    const handlePaginationModelChange = (model: { page: number; pageSize: number }) => {
+        if (onPageChange) {
+            onPageChange(model.page + 1, model.pageSize) // 转换为 1 基础页码传给后端
+        }
+    }
 
     return (
         <Paper sx={{ height: 600, width: '100%' }}>
             <DataGrid
                 rows={rows}
                 columns={columns}
-                initialState={{ 
-                    pagination: { 
-                        paginationModel 
-                    }
+                paginationMode="server" // 启用服务器端分页
+                rowCount={rowCount} // 总行数，用于分页计算
+                loading={loading}
+                paginationModel={{ 
+                    page: currentPage, 
+                    pageSize: currentPageSize 
                 }}
+                onPaginationModelChange={handlePaginationModelChange}
                 pageSizeOptions={[5, 10, 25, 50]}
                 checkboxSelection
                 disableRowSelectionOnClick

@@ -27,6 +27,8 @@ export default function StockListPage() {
   const [tableData, setTableData] = useState<StockData[]>([]) // 明确定义为数组类型
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState<any>(null) // 存储分页信息
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   // 防抖处理：输入停止500ms后才触发搜索
   useEffect(() => {
@@ -39,14 +41,27 @@ export default function StockListPage() {
 
   // 页面初始加载时获取默认数据
   useEffect(() => {
-    // 页面加载时获取前10条数据
-    handleSearch('')
+    // 页面加载时获取第一页数据
+    handleSearch('', 1, pageSize)
   }, [])
 
-  // 当防抖值变化时执行搜索
+  // 当防抖值变化时执行搜索（重置到第一页）
   useEffect(() => {
-    handleSearch(debouncedSearchValue)
+    setCurrentPage(1) // 搜索时重置到第一页
+    handleSearch(debouncedSearchValue, 1, pageSize)
   }, [debouncedSearchValue])
+
+  // 分页变化处理
+  const handlePageChange = (page: number, newPageSize: number) => {
+    setCurrentPage(page)
+    if (newPageSize !== pageSize) {
+      setPageSize(newPageSize)
+      setCurrentPage(1) // 改变页面大小时重置到第一页
+      handleSearch(debouncedSearchValue, 1, newPageSize)
+    } else {
+      handleSearch(debouncedSearchValue, page, newPageSize)
+    }
+  }
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
@@ -54,12 +69,12 @@ export default function StockListPage() {
     console.log('输入值实时变化：', value)
   }
 
-  const handleSearch = useCallback(async (searchTerm: string) => {
+  const handleSearch = useCallback(async (searchTerm: string, page: number = 1, size: number = 10) => {
     setLoading(true)
     try {
       const params = searchTerm 
-        ? { keyWord: searchTerm, page: 1, pageSize: 10 }
-        : { page: 1, pageSize: 10 } // 空搜索时只传分页参数
+        ? { keyWord: searchTerm, page, pageSize: size }
+        : { page, pageSize: size } // 空搜索时只传分页参数
       
       const response = await listCompaniesByIdOrCode(params)
       console.log('API返回数据:', response) // 调试日志
@@ -73,6 +88,7 @@ export default function StockListPage() {
     } catch (error) {
       console.error('listCompaniesByIdOrCode error:', error)
       setTableData([]) // 错误时设置空数组
+      setPagination(null)
     } finally {
       setLoading(false)
     }
@@ -93,29 +109,14 @@ export default function StockListPage() {
           fullWidth
           size="small"
         />
-        
-        {loading && (
-          <Box sx={{ mt: 2 }}>
-            <p className={styles.searching}>加载中...</p>
-          </Box>
-        )}
-        
-        {debouncedSearchValue && !loading && (
-          <Box sx={{ mt: 2 }}>
-            <p className={styles.searching}>搜索结果：{debouncedSearchValue}</p>
-          </Box>
-        )}
-
-        {pagination && !loading && (
-          <Box sx={{ mt: 2 }}>
-            <p className={styles.searching}>
-              第 {pagination.currentPage} 页，共 {pagination.totalPages} 页，总计 {pagination.total} 条数据
-            </p>
-          </Box>
-        )}
 
         <Box sx={{ mt: 2 }}>
-          <StockList tableData={tableData} />
+          <StockList 
+            tableData={tableData} 
+            pagination={pagination}
+            loading={loading}
+            onPageChange={handlePageChange}
+          />
         </Box>
     </Box>
   )
