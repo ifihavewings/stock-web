@@ -2,7 +2,7 @@
 import { Box, TextField } from "@mui/material"
 import { useState, useEffect, useCallback } from "react"
 import styles from './page.module.css'
-import {listCompaniesByIdOrCode} from "@/app/apis/companies"
+import {listCompaniesByIdOrCode, searchCompanies} from "@/app/apis/companies"
 import StockList from "@/components/StockList"
 
 // 定义股票数据类型
@@ -72,11 +72,18 @@ export default function StockListPage() {
   const handleSearch = useCallback(async (searchTerm: string, page: number = 1, size: number = 10) => {
     setLoading(true)
     try {
-      const params = searchTerm 
-        ? { keyWord: searchTerm, page, pageSize: size }
-        : { page, pageSize: size } // 空搜索时只传分页参数
+      let response;
       
-      const response = await listCompaniesByIdOrCode(params)
+      if (searchTerm) {
+        // 有搜索词时使用专门的搜索接口（更好的排序）
+        const params = { keyword: searchTerm, page, pageSize: size };
+        response = await searchCompanies(params);
+      } else {
+        // 无搜索词时使用列表接口
+        const params = { page, pageSize: size };
+        response = await listCompaniesByIdOrCode(params);
+      }
+      
       console.log('API返回数据:', response) // 调试日志
       
       // 根据实际的API响应结构：response.data.data 是实际的数组数据
@@ -100,14 +107,15 @@ export default function StockListPage() {
       height: '100%'
     }}>
         <TextField 
-          label="stock code / name" 
+          label="智能搜索" 
           variant="outlined" 
           value={searchValue}
           autoFocus
           onChange={handleSearchChange}
-          placeholder="enter stock code or name"
+          placeholder="输入股票代码（如：000001）或公司名称（如：平安）"
           fullWidth
           size="small"
+          helperText="支持股票代码和公司名称模糊搜索，结果按相关性排序"
         />
 
         <Box sx={{ mt: 2 }}>
