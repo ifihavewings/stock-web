@@ -19,6 +19,7 @@ interface StockData {
   totalShares: string | null;
   circulatingShares: string | null;
   lastUpdateTimestamp: string | null;
+  isFavorite?: number; // 添加收藏状态字段
 }
 
 export default function StockListPage() {

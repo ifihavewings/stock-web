@@ -1,4 +1,4 @@
-import {list} from '@/lib/request'
+import {list, post, get} from '@/lib/request'
 
 const prefix = '/companies'
 
@@ -10,4 +10,14 @@ export function listCompaniesByIdOrCode(params?: Record<string, any>) {
 // 模糊搜索接口（专门的搜索功能，排序更好）
 export function searchCompanies(params?: Record<string, any>) {
   return list(`${prefix}/search`, params)
+}
+
+// 收藏/取消收藏股票
+export function favoriteStock(stockCode: string) {
+  return post(`${prefix}/favorite/${stockCode}`)
+}
+
+// 获取收藏的股票列表
+export function getFavoriteStocks(params?: Record<string, any>) {
+  return get(`${prefix}/favorites`, params)
 }

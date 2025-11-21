@@ -2,13 +2,14 @@ import { DataGrid, GridColDef, GridActionsCellItem, GridRenderCellParams, GridRo
 import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { favoriteStock } from '@/app/apis/companies';
 
 // 定义股票数据类型
 interface StockData {
@@ -24,6 +25,7 @@ interface StockData {
     totalShares: string | null;
     circulatingShares: string | null;
     lastUpdateTimestamp: string | null;
+    isFavorite?: number; // 添加收藏状态字段
 }
 
 interface StockListProps {
@@ -43,8 +45,20 @@ interface StockListProps {
 export default function StockList(props: StockListProps) {
     const { tableData, pagination, loading = false, onPageChange } = props;
 
-    // 收藏状态管理 - 使用Set存储已收藏的股票代码
-    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    // 收藏状态管理 - 使用Map存储股票代码和收藏状态的映射
+    const [favorites, setFavorites] = useState<Map<string, number>>(new Map());
+    const [favoriteLoading, setFavoriteLoading] = useState<Set<string>>(new Set());
+
+    // 初始化收藏状态
+    useEffect(() => {
+        const newFavorites = new Map<string, number>();
+        tableData.forEach(stock => {
+            if (stock.isFavorite !== undefined) {
+                newFavorites.set(stock.stockCode, stock.isFavorite);
+            }
+        });
+        setFavorites(newFavorites);
+    }, [tableData]);
 
     // 工具函数
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
@@ -68,18 +82,42 @@ export default function StockList(props: StockListProps) {
     const handleDelete = (stockCode: string) => console.log('删除:', stockCode);
     
     // 收藏处理函数
-    const handleFavorite = (stockCode: string) => {
-        setFavorites(prev => {
-            const newFavorites = new Set(prev);
-            if (newFavorites.has(stockCode)) {
-                newFavorites.delete(stockCode);
-                console.log('取消收藏:', stockCode);
+    const handleFavorite = async (stockCode: string) => {
+        // 防止重复点击
+        if (favoriteLoading.has(stockCode)) {
+            return;
+        }
+
+        // 设置加载状态
+        setFavoriteLoading(prev => new Set(prev).add(stockCode));
+
+        try {
+            // 调用后端API
+            const response = await favoriteStock(stockCode);
+            
+            if (response.data?.success) {
+                // 更新本地状态
+                setFavorites(prev => {
+                    const newFavorites = new Map(prev);
+                    newFavorites.set(stockCode, response.data.isFavorite);
+                    return newFavorites;
+                });
+
+                const action = response.data.isFavorite === 1 ? '添加收藏' : '取消收藏';
+                console.log(`${action}: ${stockCode}`, response.data.message);
             } else {
-                newFavorites.add(stockCode);
-                console.log('添加收藏:', stockCode);
+                console.error('收藏操作失败:', response.data?.message);
             }
-            return newFavorites;
-        });
+        } catch (error) {
+            console.error('收藏操作出错:', error);
+        } finally {
+            // 移除加载状态
+            setFavoriteLoading(prev => {
+                const newLoading = new Set(prev);
+                newLoading.delete(stockCode);
+                return newLoading;
+            });
+        }
     };
 
     // 列配置
@@ -175,12 +213,13 @@ export default function StockList(props: StockListProps) {
             getActions: (params: GridRowParams) => [
                 <GridActionsCellItem
                     key="favorite"
-                    icon={favorites.has(params.row.stockCode) ? 
+                    icon={favorites.get(params.row.stockCode) === 1 ? 
                         <FavoriteIcon sx={{ color: 'error.main' }} /> : 
                         <FavoriteBorderIcon />
                     }
-                    label={favorites.has(params.row.stockCode) ? "取消收藏" : "添加收藏"}
+                    label={favorites.get(params.row.stockCode) === 1 ? "取消收藏" : "添加收藏"}
                     onClick={() => handleFavorite(params.row.stockCode)}
+                    disabled={favoriteLoading.has(params.row.stockCode)}
                 />,
                 <GridActionsCellItem
                     key="view"
