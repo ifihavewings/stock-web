@@ -26,7 +26,7 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(50)
 
   // 页面初始加载时获取收藏数据
   useEffect(() => {
@@ -72,13 +72,6 @@ export default function FavoritesPage() {
       p: 2,
       height: '100%'
     }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        我的收藏股票
-      </Typography>
-      
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        这里显示您收藏的所有股票，您可以继续管理收藏状态或查看股票详情。
-      </Typography>
 
       <Box sx={{ mt: 2 }}>
         <StockList 

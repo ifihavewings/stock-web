@@ -10,6 +10,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { favoriteStock } from '@/app/apis/companies';
+import { useRouter } from 'next/navigation';
 
 // 定义股票数据类型
 interface StockData {
@@ -44,6 +45,7 @@ interface StockListProps {
 
 export default function StockList(props: StockListProps) {
     const { tableData, pagination, loading = false, onPageChange } = props;
+    const router = useRouter();
 
     // 收藏状态管理 - 使用Map存储股票代码和收藏状态的映射
     const [favorites, setFavorites] = useState<Map<string, number>>(new Map());
@@ -77,7 +79,10 @@ export default function StockList(props: StockListProps) {
 
     // 操作处理函数
     const handleView = (stockCode: string) => console.log('查看:', stockCode);
-    const handleAnalyze = (stockCode: string) => console.log('分析:', stockCode);
+    const handleAnalyze = (stockCode: string) => {
+        // 跳转到股票分析页面
+        router.push(`/stock-analysis/${stockCode}`);
+    };
     const handleEdit = (stockCode: string) => console.log('编辑:', stockCode);
     const handleDelete = (stockCode: string) => console.log('删除:', stockCode);
     

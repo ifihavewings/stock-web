@@ -9,8 +9,8 @@ export const menuItems = [
         iconColor: "#fff",
     },
     {
-        title: "My Favorites",
-        path: "/favorites",
+        title: "Watched Stocks",
+        path: "/watched",
         icon: FavoriteIcon,
         iconColor: "#fff",
     }
