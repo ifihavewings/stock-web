@@ -202,9 +202,18 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       // 设置事件监听器
       chart.subscribeCrosshairMove((param) => {
         if (param.time && candlestickSeriesRef.current) {
-          const data = param.seriesData.get(candlestickSeriesRef.current) as any;
-          if (data) {
-            setHoveredData(data as CandlestickData);
+          // 从原始数据中查找完整的数据，包含额外字段
+          const timeStr = typeof param.time === 'string' ? param.time : new Date(param.time * 1000).toISOString().split('T')[0];
+          const fullData = chartData.find(item => item.time === timeStr);
+          
+          if (fullData) {
+            setHoveredData(fullData);
+          } else {
+            // 如果找不到完整数据，使用图表返回的基础数据
+            const data = param.seriesData.get(candlestickSeriesRef.current) as any;
+            if (data) {
+              setHoveredData(data as CandlestickData);
+            }
           }
         } else {
           setHoveredData(null);
@@ -544,30 +553,30 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
           <div
             style={{
               position: 'absolute',
-              top: 10,
-              left: 10,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              border: '1px solid #e0e0e0',
-              borderRadius: '4px',
-              padding: '12px',
-              fontSize: '13px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              top: 8,
+              left: 8,
+              backgroundColor: 'rgba(255, 255, 255, 0.96)',
+              border: '1px solid #d0d0d0',
+              borderRadius: '6px',
+              padding: '8px 10px',
+              fontSize: '11px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
               zIndex: 1000,
-              minWidth: '220px',
+              minWidth: '160px',
               pointerEvents: 'none'
             }}
           >
-            <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+            <div style={{ fontWeight: 600, marginBottom: '5px', color: '#333', fontSize: '12px' }}>
               {typeof hoveredData.time === 'string' 
                 ? new Date(hoveredData.time).toLocaleDateString('zh-CN')
                 : new Date(hoveredData.time * 1000).toLocaleDateString('zh-CN')
               }
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '6px', color: '#666' }}>
-              <span>开盘价:</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr', gap: '3px 6px', color: '#666', lineHeight: '1.4' }}>
+              <span>开盘:</span>
               <span style={{ fontWeight: 500, color: '#333' }}>{hoveredData.open.toFixed(2)}</span>
               
-              <span>收盘价:</span>
+              <span>收盘:</span>
               <span style={{ 
                 fontWeight: 500, 
                 color: hoveredData.close >= hoveredData.open ? theme.upColor : theme.downColor 
@@ -575,10 +584,10 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
                 {hoveredData.close.toFixed(2)}
               </span>
               
-              <span>最高价:</span>
+              <span>最高:</span>
               <span style={{ fontWeight: 500, color: '#333' }}>{hoveredData.high.toFixed(2)}</span>
               
-              <span>最低价:</span>
+              <span>最低:</span>
               <span style={{ fontWeight: 500, color: '#333' }}>{hoveredData.low.toFixed(2)}</span>
               
               <span>振幅:</span>
@@ -590,12 +599,21 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
                 <>
                   <span>成交量:</span>
                   <span style={{ fontWeight: 500, color: '#333' }}>
-                    {((hoveredData as any).volume / 10000).toFixed(2)}万
+                    {((hoveredData as any).volume / 10000).toFixed(0)}万
                   </span>
                 </>
               )}
               
-              <span>涨跌额:</span>
+              {(hoveredData as any).tradingAmount && (
+                <>
+                  <span>成交额:</span>
+                  <span style={{ fontWeight: 500, color: '#333' }}>
+                    {((hoveredData as any).tradingAmount / 100000000).toFixed(2)}亿
+                  </span>
+                </>
+              )}
+              
+              <span>涨跌:</span>
               <span style={{ 
                 fontWeight: 500, 
                 color: hoveredData.close - hoveredData.open >= 0 ? theme.upColor : theme.downColor 
@@ -604,7 +622,7 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
                 {(hoveredData.close - hoveredData.open).toFixed(2)}
               </span>
               
-              <span>涨跌幅:</span>
+              <span>涨幅:</span>
               <span style={{ 
                 fontWeight: 500, 
                 color: hoveredData.close - hoveredData.open >= 0 ? theme.upColor : theme.downColor 

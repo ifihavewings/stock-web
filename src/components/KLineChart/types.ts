@@ -80,6 +80,10 @@ export interface CandlestickData {
   high: number;
   low: number;
   close: number;
+  volume?: number;
+  tradingAmount?: number;
+  priceChange?: number | null;
+  priceChangePercentage?: number | null;
 }
 
 // 成交量数据格式
