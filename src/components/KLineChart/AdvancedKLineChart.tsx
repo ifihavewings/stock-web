@@ -73,6 +73,7 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
   const [volumeData, setVolumeData] = useState<VolumeData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredData, setHoveredData] = useState<CandlestickData | null>(null);
 
   // 合并配置
   const mergedConfig = useMemo((): Required<KLineChartConfig> => {
@@ -125,9 +126,9 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       timeScale: {
         borderColor: theme.borderColor,
         timeVisible: mergedConfig.showTimeScale,
-        rightOffset: mergedConfig.rightOffset,
-        barSpacing: 6,
-        minBarSpacing: 3,
+        rightOffset: 5,  // 减小右侧留白
+        barSpacing: 8,   // 增加条形间距，让每个条更清晰
+        minBarSpacing: 2,
       },
       localization: {
         locale: mergedConfig.locale,
@@ -199,6 +200,14 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
 
       // 设置事件监听器
       chart.subscribeCrosshairMove((param) => {
+        if (param.time && candlestickSeriesRef.current) {
+          const data = param.seriesData.get(candlestickSeriesRef.current) as any;
+          if (data) {
+            setHoveredData(data as CandlestickData);
+          }
+        } else {
+          setHoveredData(null);
+        }
         onCrosshairMove?.(param);
       });
 
@@ -251,6 +260,23 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
 
       // 更新技术指标
       updateIndicators(data);
+
+      // 自动适应图表可见范围，显示所有数据
+      if (chartRef.current && data.length > 0) {
+        // 先 fitContent 让所有数据可见
+        chartRef.current.timeScale().fitContent();
+        
+        // 然后调整为显示最后100条，更符合习惯
+        setTimeout(() => {
+          if (chartRef.current && data.length > 50) {
+            const visibleCount = Math.min(100, data.length);
+            chartRef.current.timeScale().setVisibleLogicalRange({
+              from: data.length - visibleCount,
+              to: data.length - 1
+            });
+          }
+        }, 100);
+      }
 
       setChartData(data);
       onDataUpdate?.(data);
@@ -461,7 +487,84 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
           height: (stockCode || stockName) ? height - 50 : height,
           position: 'relative'
         }}
-      />
+      >
+        {/* 悬停信息框 */}
+        {hoveredData && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: '1px solid #e0e0e0',
+              borderRadius: '4px',
+              padding: '12px',
+              fontSize: '13px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              zIndex: 1000,
+              minWidth: '220px',
+              pointerEvents: 'none'
+            }}
+          >
+            <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+              {typeof hoveredData.time === 'string' 
+                ? new Date(hoveredData.time).toLocaleDateString('zh-CN')
+                : new Date(hoveredData.time * 1000).toLocaleDateString('zh-CN')
+              }
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '6px', color: '#666' }}>
+              <span>开盘价:</span>
+              <span style={{ fontWeight: 500, color: '#333' }}>{hoveredData.open.toFixed(2)}</span>
+              
+              <span>收盘价:</span>
+              <span style={{ 
+                fontWeight: 500, 
+                color: hoveredData.close >= hoveredData.open ? theme.upColor : theme.downColor 
+              }}>
+                {hoveredData.close.toFixed(2)}
+              </span>
+              
+              <span>最高价:</span>
+              <span style={{ fontWeight: 500, color: '#333' }}>{hoveredData.high.toFixed(2)}</span>
+              
+              <span>最低价:</span>
+              <span style={{ fontWeight: 500, color: '#333' }}>{hoveredData.low.toFixed(2)}</span>
+              
+              <span>振幅:</span>
+              <span style={{ fontWeight: 500, color: '#333' }}>
+                {(((hoveredData.high - hoveredData.low) / hoveredData.low) * 100).toFixed(2)}%
+              </span>
+              
+              {(hoveredData as any).volume && (
+                <>
+                  <span>成交量:</span>
+                  <span style={{ fontWeight: 500, color: '#333' }}>
+                    {((hoveredData as any).volume / 10000).toFixed(2)}万
+                  </span>
+                </>
+              )}
+              
+              <span>涨跌额:</span>
+              <span style={{ 
+                fontWeight: 500, 
+                color: hoveredData.close - hoveredData.open >= 0 ? theme.upColor : theme.downColor 
+              }}>
+                {hoveredData.close - hoveredData.open >= 0 ? '+' : ''}
+                {(hoveredData.close - hoveredData.open).toFixed(2)}
+              </span>
+              
+              <span>涨跌幅:</span>
+              <span style={{ 
+                fontWeight: 500, 
+                color: hoveredData.close - hoveredData.open >= 0 ? theme.upColor : theme.downColor 
+              }}>
+                {hoveredData.close - hoveredData.open >= 0 ? '+' : ''}
+                {(((hoveredData.close - hoveredData.open) / hoveredData.open) * 100).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
