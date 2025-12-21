@@ -92,8 +92,8 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
   // 创建图表配置
   const chartOptions = useMemo(() => {
     const baseOptions = {
-      width: mergedConfig.width,
-      height: height,
+      width: 800,  // 初始宽度，ResizeObserver会调整
+      height: 600, // 初始高度，ResizeObserver会调整
       layout: {
         background: { type: ColorType.Solid, color: theme.background },
         textColor: theme.textColor,
@@ -127,8 +127,8 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       timeScale: {
         borderColor: theme.borderColor,
         timeVisible: mergedConfig.showTimeScale,
-        rightOffset: 5,  // 减小右侧留白
-        barSpacing: 8,   // 增加条形间距，让每个条更清晰
+        rightOffset: 12,  // 右侧留白空间
+        barSpacing: 6,    // K线间距
         minBarSpacing: 2,
       },
       localization: {
@@ -174,8 +174,19 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
     }
 
     try {
+      // 获取容器实际尺寸
+      const containerWidth = chartContainerRef.current.clientWidth;
+      const containerHeight = chartContainerRef.current.clientHeight;
+      
+      // 使用容器实际尺寸创建图表
+      const actualOptions = {
+        ...chartOptions,
+        width: containerWidth || 800,
+        height: containerHeight || 600,
+      };
+      
       // 创建图表
-      const chart = createChart(chartContainerRef.current, chartOptions);
+      const chart = createChart(chartContainerRef.current, actualOptions);
       chartRef.current = chart;
 
       // 创建K线系列
@@ -271,19 +282,21 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       // 更新技术指标
       updateIndicators(data);
 
-      // 自动适应图表可见范围，显示所有数据
+      // 自动适应图表可见范围
       if (chartRef.current && data.length > 0) {
-        // 先 fitContent 让所有数据可见
-        chartRef.current.timeScale().fitContent();
-        
-        // 然后调整为显示最后500条（约2年），更符合习惯
+        // 显示最近250条K线（约1年），既能看清细节又能看到趋势
         setTimeout(() => {
-          if (chartRef.current && data.length > 50) {
-            const visibleCount = Math.min(500, data.length);
-            chartRef.current.timeScale().setVisibleLogicalRange({
-              from: data.length - visibleCount,
-              to: data.length - 1
-            });
+          if (chartRef.current) {
+            const visibleCount = Math.min(250, data.length);
+            if (data.length > 50) {
+              chartRef.current.timeScale().setVisibleLogicalRange({
+                from: Math.max(0, data.length - visibleCount),
+                to: data.length - 1
+              });
+            } else {
+              // 数据较少时使用fitContent
+              chartRef.current.timeScale().fitContent();
+            }
           }
         }, 100);
       }
