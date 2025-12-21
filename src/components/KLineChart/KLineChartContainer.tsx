@@ -37,6 +37,7 @@ import {
 import { AdvancedKLineChart } from './KLineChartWrapper';
 import { IndicatorConfigPanel } from './IndicatorConfigPanel';
 import { klineDataService } from './dataService';
+import { KLinePeriodConverter, KLinePeriod } from './periodConverter';
 import { 
   KLineChartConfig, 
   CandlestickData, 
@@ -75,7 +76,9 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
   onClose
 }) => {
   // 状态管理
+  const [rawDailyData, setRawDailyData] = useState<CandlestickData[]>([]); // 原始日K数据
   const [chartData, setChartData] = useState<CandlestickData[]>([]);
+  const [currentPeriod, setCurrentPeriod] = useState<KLinePeriod>('day'); // 当前周期
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -143,7 +146,11 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
         throw new Error('未找到数据，请检查股票代码或时间范围');
       }
 
-      setChartData(result.candlestickData);
+      // 保存原始日K数据
+      setRawDailyData(result.candlestickData);
+      // 根据当前周期转换数据
+      const convertedData = KLinePeriodConverter.convertByPeriod(result.candlestickData, currentPeriod);
+      setChartData(convertedData);
       setStockInfo(result.stockInfo);
       setLastUpdateTime(new Date());
 
@@ -259,6 +266,30 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
               <Typography variant="subtitle1" fontWeight="bold" noWrap>
                 {displayTitle}
               </Typography>
+              
+              {/* K线周期切换 */}
+              <Stack direction="row" spacing={0.5}>
+                {(['day', 'week', 'month'] as KLinePeriod[]).map((period) => (
+                  <Button
+                    key={period}
+                    size="small"
+                    variant={currentPeriod === period ? 'contained' : 'outlined'}
+                    onClick={() => {
+                      setCurrentPeriod(period);
+                      const convertedData = KLinePeriodConverter.convertByPeriod(rawDailyData, period);
+                      setChartData(convertedData);
+                    }}
+                    sx={{ 
+                      minWidth: '48px',
+                      height: '28px',
+                      fontSize: '12px',
+                      px: 1
+                    }}
+                  >
+                    {KLinePeriodConverter.getPeriodLabel(period)}
+                  </Button>
+                ))}
+              </Stack>
               
               {lastUpdateTime && (
                 <Typography variant="caption" color="text.secondary">
