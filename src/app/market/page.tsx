@@ -684,66 +684,22 @@ export default function MarketPage() {
             left: 0,
             width: '100vw',
             height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: 'white',
             zIndex: 2000,
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          {/* 弹窗标题栏 */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              p: 2,
-              backgroundColor: 'white',
-              borderBottom: '1px solid #e0e0e0',
-            }}
-          >
-            <Typography variant="h6">
-              {selectedStock.company?.stockSymbol || selectedStock.stockCode} ({selectedStock.stockCode}) - K线图
-            </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Chip 
-                label={selectedStock.company?.industrySector || '-'} 
-                size="small" 
-                color="primary"
-                variant="outlined"
-              />
-              <Typography variant="body2" color="text.secondary">
-                最新价格: 
-                <Box
-                  component="span"
-                  sx={{
-                    color: getPriceChangeColor(selectedStock.priceChange),
-                    fontWeight: 'bold',
-                    ml: 0.5
-                  }}
-                >
-                  {formatNumber(selectedStock.closingPrice)}
-                </Box>
-              </Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Close />}
-                onClick={handleCloseKlineChart}
-              >
-                关闭
-              </Button>
-            </Stack>
-          </Box>
-
-          {/* K线图内容区域 */}
-          <Box sx={{ flex: 1, backgroundColor: 'white' }}>
+          {/* K线图内容区域 - 直接全屏显示 */}
+          <Box sx={{ flex: 1, height: '100vh' }}>
             <KLineChartContainer
               stockCode={selectedStock.stockCode}
               stockName={selectedStock.company?.stockSymbol}
-              height={window.innerHeight - 80} // 减去标题栏高度
+              height={window.innerHeight}
               showControls={true}
               autoLoad={true}
               defaultTimeRange="6M"
+              onClose={handleCloseKlineChart}
             />
           </Box>
         </Box>

@@ -30,7 +30,8 @@ import {
   FullscreenExit,
   ZoomIn,
   ZoomOut,
-  Timeline
+  Timeline,
+  Close
 } from '@mui/icons-material';
 
 import { AdvancedKLineChart } from './KLineChartWrapper';
@@ -51,6 +52,7 @@ interface KLineChartContainerProps {
   autoLoad?: boolean;
   showControls?: boolean;
   defaultTimeRange?: '1M' | '3M' | '6M' | '1Y' | 'ALL';
+  onClose?: () => void;
 }
 
 // 时间范围配置
@@ -68,7 +70,8 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
   height = 600,
   autoLoad = true,
   showControls = true,
-  defaultTimeRange = '6M'
+  defaultTimeRange = '6M',
+  onClose
 }) => {
   // 状态管理
   const [chartData, setChartData] = useState<CandlestickData[]>([]);
@@ -247,24 +250,16 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
               justifyContent: 'space-between',
               minHeight: 48
             }}
-          >
+>
             {/* 左侧信息 */}
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant="h6" noWrap>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Typography variant="subtitle1" fontWeight="bold" noWrap>
                 {displayTitle}
               </Typography>
               
-              {stockInfo?.industry && (
-                <Chip 
-                  label={stockInfo.industry} 
-                  size="small" 
-                  variant="outlined"
-                />
-              )}
-
               {lastUpdateTime && (
                 <Typography variant="caption" color="text.secondary">
-                  更新: {lastUpdateTime.toLocaleTimeString()}
+                  {lastUpdateTime.toLocaleTimeString()}
                 </Typography>
               )}
 
@@ -336,6 +331,18 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
                   {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
                 </IconButton>
               </Tooltip>
+
+              {onClose && (
+                <Tooltip title="关闭">
+                  <IconButton 
+                    onClick={onClose}
+                    size="small"
+                    color="error"
+                  >
+                    <Close />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Stack>
           </Toolbar>
         )}
