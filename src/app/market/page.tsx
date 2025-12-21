@@ -715,7 +715,7 @@ export default function MarketPage() {
               stockName={selectedStock.company?.stockSymbol}
               showControls={true}
               autoLoad={true}
-              defaultTimeRange="6M"
+              defaultTimeRange="2Y"
               onClose={handleCloseKlineChart}
             />
           </Box>

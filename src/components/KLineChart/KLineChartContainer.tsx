@@ -51,7 +51,7 @@ interface KLineChartContainerProps {
   height?: number;
   autoLoad?: boolean;
   showControls?: boolean;
-  defaultTimeRange?: '1M' | '3M' | '6M' | '1Y' | 'ALL';
+  defaultTimeRange?: '1M' | '3M' | '6M' | '1Y' | '2Y' | 'ALL';
   onClose?: () => void;
 }
 
@@ -61,6 +61,7 @@ const TIME_RANGES = {
   '3M': { label: '3个月', days: 90 },
   '6M': { label: '6个月', days: 180 },
   '1Y': { label: '1年', days: 365 },
+  '2Y': { label: '2年', days: 730 },
   'ALL': { label: '全部', days: null }
 };
 
@@ -70,7 +71,7 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
   height = 600,
   autoLoad = true,
   showControls = true,
-  defaultTimeRange = '6M',
+  defaultTimeRange = '2Y',
   onClose
 }) => {
   // 状态管理

@@ -276,10 +276,10 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
         // 先 fitContent 让所有数据可见
         chartRef.current.timeScale().fitContent();
         
-        // 然后调整为显示最后100条，更符合习惯
+        // 然后调整为显示最后500条（约2年），更符合习惯
         setTimeout(() => {
           if (chartRef.current && data.length > 50) {
-            const visibleCount = Math.min(100, data.length);
+            const visibleCount = Math.min(500, data.length);
             chartRef.current.timeScale().setVisibleLogicalRange({
               from: data.length - visibleCount,
               to: data.length - 1
