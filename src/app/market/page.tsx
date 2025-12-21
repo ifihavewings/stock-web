@@ -56,6 +56,7 @@ interface StockMarketData {
 interface MarketQueryParams {
   stockCodeLike?: string
   stockNameLike?: string
+  industrySectorLike?: string
   startDate?: string
   endDate?: string
   minClosePrice?: number
@@ -97,7 +98,9 @@ export default function MarketPage() {
 
   // 防抖搜索
   const [searchValue, setSearchValue] = useState('')
+  const [industrySearchValue, setIndustrySearchValue] = useState('')
   const [debouncedSearchValue, setDebouncedSearchValue] = useState('')
+  const [debouncedIndustrySearchValue, setDebouncedIndustrySearchValue] = useState('')
 
   // 防抖处理
   useEffect(() => {
@@ -107,9 +110,18 @@ export default function MarketPage() {
     return () => clearTimeout(timer)
   }, [searchValue])
 
+  // 行业搜索防抖处理
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedIndustrySearchValue(industrySearchValue)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [industrySearchValue])
+
   // 当搜索值变化时，重置到第一页
   useEffect(() => {
     const searchQuery = debouncedSearchValue.trim()
+    const industryQuery = debouncedIndustrySearchValue.trim()
     // 如果搜索值包含数字，优先作为股票代码搜索，否则作为简称搜索
     const hasNumbers = /\d/.test(searchQuery)
     
@@ -117,10 +129,11 @@ export default function MarketPage() {
       ...prev,
       stockCodeLike: hasNumbers && searchQuery ? searchQuery : undefined,
       stockNameLike: !hasNumbers && searchQuery ? searchQuery : undefined,
+      industrySectorLike: industryQuery || undefined,
       page: 1
     }))
     setPage(1)
-  }, [debouncedSearchValue])
+  }, [debouncedSearchValue, debouncedIndustrySearchValue])
 
   // 获取行情数据
   const fetchMarketData = useCallback(async (params: MarketQueryParams) => {
@@ -233,6 +246,7 @@ export default function MarketPage() {
   // 清除筛选条件
   const handleClearFilters = () => {
     setSearchValue('')
+    setIndustrySearchValue('')
     setSearchParams({
       page: 1,
       pageSize: 20,
@@ -258,7 +272,7 @@ export default function MarketPage() {
       <Card sx={{ mb: 1.5, flexShrink: 0 }}>
         <CardContent sx={{ py: 1.5 }}>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={2.5}>
               <TextField
                 fullWidth
                 label="搜索股票代码或简称"
@@ -270,7 +284,19 @@ export default function MarketPage() {
               />
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid item xs={12} md={2.5}>
+              <TextField
+                fullWidth
+                label="搜索行业板块"
+                variant="outlined"
+                value={industrySearchValue}
+                onChange={(e) => setIndustrySearchValue(e.target.value)}
+                placeholder="例如: 银行 或 科技"
+                size="small"
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={1.5}>
               <FormControl fullWidth size="small">
                 <InputLabel>排序字段</InputLabel>
                 <Select
@@ -287,12 +313,12 @@ export default function MarketPage() {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={1.5}>
+            <Grid item xs={12} md={1}>
               <FormControl fullWidth size="small">
-                <InputLabel>排序方向</InputLabel>
+                <InputLabel>方向</InputLabel>
                 <Select
                   value={searchParams.sortDirection || 'DESC'}
-                  label="排序方向"
+                  label="方向"
                   onChange={(e) => handleSortChange(searchParams.sortField || 'change_percent', e.target.value as 'ASC' | 'DESC')}
                 >
                   <MenuItem value="DESC">降序</MenuItem>
@@ -301,12 +327,12 @@ export default function MarketPage() {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={1.5}>
+            <Grid item xs={12} md={1}>
               <FormControl fullWidth size="small">
-                <InputLabel>每页条数</InputLabel>
+                <InputLabel>条数</InputLabel>
                 <Select
                   value={pageSize}
-                  label="每页条数"
+                  label="条数"
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 >
                   <MenuItem value={10}>10</MenuItem>
@@ -317,7 +343,7 @@ export default function MarketPage() {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid item xs={12} md={2.5}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Button 
                   variant="outlined" 
