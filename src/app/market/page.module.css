@@ -1,0 +1,53 @@
+.market-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.market-header {
+  margin-bottom: 24px;
+}
+
+.search-filters {
+  margin-bottom: 16px;
+}
+
+.market-table {
+  overflow-x: auto;
+}
+
+.price-positive {
+  color: #f44336 !important;
+}
+
+.price-negative {
+  color: #4caf50 !important;
+}
+
+.price-neutral {
+  color: #666 !important;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .market-container {
+    padding: 16px 8px;
+  }
+  
+  .search-filters {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
