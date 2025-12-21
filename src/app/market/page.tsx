@@ -25,8 +25,9 @@ import {
   Stack,
   CircularProgress
 } from '@mui/material'
-import { TrendingUp, TrendingDown, ShowChart, ArrowUpward, ArrowDownward, UnfoldMore } from '@mui/icons-material'
+import { TrendingUp, TrendingDown, ShowChart, ArrowUpward, ArrowDownward, UnfoldMore, Timeline, Close } from '@mui/icons-material'
 import { queryDailyKLineData } from '@/app/apis/stocks'
+import { KLineChartContainer } from '@/components/KLineChart/KLineChartContainer'
 
 // 定义股票行情数据类型
 interface StockMarketData {
@@ -98,6 +99,10 @@ export default function MarketPage() {
 
   // 防抖搜索
   const [searchValue, setSearchValue] = useState('')
+  
+  // K线图弹窗状态
+  const [klineDialogOpen, setKlineDialogOpen] = useState(false)
+  const [selectedStock, setSelectedStock] = useState<StockMarketData | null>(null)
   const [industrySearchValue, setIndustrySearchValue] = useState('')
   const [debouncedSearchValue, setDebouncedSearchValue] = useState('')
   const [debouncedIndustrySearchValue, setDebouncedIndustrySearchValue] = useState('')
@@ -254,6 +259,18 @@ export default function MarketPage() {
       sortDirection: 'DESC'
     })
     setPage(1)
+  }
+
+  // 打开K线图弹窗
+  const handleOpenKlineChart = (stock: StockMarketData) => {
+    setSelectedStock(stock)
+    setKlineDialogOpen(true)
+  }
+
+  // 关闭K线图弹窗
+  const handleCloseKlineChart = () => {
+    setKlineDialogOpen(false)
+    setSelectedStock(null)
   }
 
   return (
@@ -500,6 +517,7 @@ export default function MarketPage() {
                 </Box>
               </TableCell>
               <TableCell sx={{ minWidth: 100 }}>行业</TableCell>
+              <TableCell sx={{ minWidth: 80 }}>操作</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -614,11 +632,22 @@ export default function MarketPage() {
                     variant="outlined"
                   />
                 </TableCell>
+                <TableCell>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Timeline />}
+                    onClick={() => handleOpenKlineChart(stock)}
+                    sx={{ minWidth: 'auto', px: 1 }}
+                  >
+                    图表
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
             {data.length === 0 && !loading && (
               <TableRow>
-                <TableCell colSpan={13} align="center" sx={{ py: 2 }}>
+                <TableCell colSpan={14} align="center" sx={{ py: 2 }}>
                   <Typography variant="body1" color="text.secondary">
                     暂无数据
                   </Typography>
@@ -645,6 +674,80 @@ export default function MarketPage() {
           showLastButton
         />
       </Stack>
+
+      {/* 全屏K线图弹窗 */}
+      {klineDialogOpen && selectedStock && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            zIndex: 2000,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* 弹窗标题栏 */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              p: 2,
+              backgroundColor: 'white',
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <Typography variant="h6">
+              {selectedStock.company?.stockSymbol || selectedStock.stockCode} ({selectedStock.stockCode}) - K线图
+            </Typography>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Chip 
+                label={selectedStock.company?.industrySector || '-'} 
+                size="small" 
+                color="primary"
+                variant="outlined"
+              />
+              <Typography variant="body2" color="text.secondary">
+                最新价格: 
+                <Box
+                  component="span"
+                  sx={{
+                    color: getPriceChangeColor(selectedStock.priceChange),
+                    fontWeight: 'bold',
+                    ml: 0.5
+                  }}
+                >
+                  {formatNumber(selectedStock.closingPrice)}
+                </Box>
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Close />}
+                onClick={handleCloseKlineChart}
+              >
+                关闭
+              </Button>
+            </Stack>
+          </Box>
+
+          {/* K线图内容区域 */}
+          <Box sx={{ flex: 1, backgroundColor: 'white' }}>
+            <KLineChartContainer
+              stockCode={selectedStock.stockCode}
+              stockName={selectedStock.company?.stockSymbol}
+              height={window.innerHeight - 80} // 减去标题栏高度
+              showControls={true}
+              autoLoad={true}
+              defaultTimeRange="6M"
+            />
+          </Box>
+        </Box>
+      )}
     </Box>
   )
 }

@@ -1,4 +1,6 @@
-// K线图组件类型定义
+// K线图组件完整类型定义系统
+
+import { ChartOptions, DeepPartial } from 'lightweight-charts';
 
 // 数据类型定义
 export interface DailyStockData {
@@ -21,6 +23,56 @@ export interface DailyStockData {
   circulating_market_value?: number;
 }
 
+// 技术指标类型定义
+export interface IndicatorConfig {
+  id: string;
+  name: string;
+  type: 'overlay' | 'oscillator';
+  enabled: boolean;
+  visible: boolean;
+  color: string;
+  lineWidth: number;
+  params: Record<string, any>;
+}
+
+// 支持的技术指标
+export interface MovingAverageConfig extends IndicatorConfig {
+  type: 'overlay';
+  params: {
+    period: number;
+    method: 'SMA' | 'EMA' | 'WMA';
+    source: 'open' | 'high' | 'low' | 'close' | 'volume';
+  };
+}
+
+export interface RSIConfig extends IndicatorConfig {
+  type: 'oscillator';
+  params: {
+    period: number;
+    overbought: number;
+    oversold: number;
+  };
+}
+
+export interface MACDConfig extends IndicatorConfig {
+  type: 'oscillator';
+  params: {
+    fastPeriod: number;
+    slowPeriod: number;
+    signalPeriod: number;
+  };
+}
+
+export interface BollingerBandsConfig extends IndicatorConfig {
+  type: 'overlay';
+  params: {
+    period: number;
+    stdDev: number;
+  };
+}
+
+export type TechnicalIndicator = MovingAverageConfig | RSIConfig | MACDConfig | BollingerBandsConfig;
+
 // LightweightCharts所需的K线数据格式
 export interface CandlestickData {
   time: string;
@@ -37,55 +89,98 @@ export interface VolumeData {
   color?: string;
 }
 
+// 指标数据接口
+export interface IndicatorData {
+  time: string;
+  value: number | number[];
+  color?: string;
+}
+
+// 图表主题配置
+export interface ChartTheme {
+  name: string;
+  background: string;
+  textColor: string;
+  gridColor: string;
+  crosshairColor: string;
+  borderColor: string;
+  upColor: string;
+  downColor: string;
+  volumeUpColor: string;
+  volumeDownColor: string;
+}
+
+// 预定义主题
+export const CHART_THEMES: Record<string, ChartTheme> = {
+  light: {
+    name: '浅色主题',
+    background: '#FFFFFF',
+    textColor: '#333333',
+    gridColor: '#E1E3E6',
+    crosshairColor: '#758696',
+    borderColor: '#D6DCDE',
+    upColor: '#26A69A',
+    downColor: '#EF5350',
+    volumeUpColor: '#26A69A80',
+    volumeDownColor: '#EF535080',
+  },
+  dark: {
+    name: '深色主题',
+    background: '#1E1E1E',
+    textColor: '#FFFFFF',
+    gridColor: '#333333',
+    crosshairColor: '#758696',
+    borderColor: '#444444',
+    upColor: '#4CAF50',
+    downColor: '#F44336',
+    volumeUpColor: '#4CAF5080',
+    volumeDownColor: '#F4433680',
+  },
+};
+
 // K线图配置接口
 export interface KLineChartConfig {
   width?: number;
   height?: number;
-  theme?: 'light' | 'dark';
+  theme?: 'light' | 'dark' | ChartTheme;
+  showVolume?: boolean;
+  volumeHeight?: number; // 成交量区域高度百分比
+  showCrosshair?: boolean;
+  showTimeScale?: boolean;
+  showPriceScale?: boolean;
+  indicators?: TechnicalIndicator[];
+  autoScale?: boolean;
+  rightOffset?: number;
   timezone?: string;
   locale?: string;
-  crosshair?: {
-    mode?: number;
-    vertLine?: object;
-    horzLine?: object;
+  candlestickOptions?: {
+    upColor?: string;
+    downColor?: string;
+    wickUpColor?: string;
+    wickDownColor?: string;
+    borderUpColor?: string;
+    borderDownColor?: string;
   };
-  grid?: {
-    vertLines?: { color: string; style?: number };
-    horzLines?: { color: string; style?: number };
-  };
-  layout?: {
-    background?: { color: string };
-    textColor?: string;
-    fontSize?: number;
-    fontFamily?: string;
-  };
-  rightPriceScale?: {
-    borderColor?: string;
-    scaleMargins?: { top: number; bottom: number };
-    mode?: number;
-  };
-  timeScale?: {
-    borderColor?: string;
-    timeVisible?: boolean;
-    secondsVisible?: boolean;
-    rightOffset?: number;
-    barSpacing?: number;
-    minBarSpacing?: number;
-  };
+  chartOptions?: DeepPartial<ChartOptions>;
 }
 
 // K线图组件属性接口
 export interface KLineChartProps {
   stockCode: string;
+  stockName?: string;
   symbol?: string;
   initialData?: CandlestickData[];
   config?: KLineChartConfig;
-  showVolume?: boolean;
-  showIndicators?: string[];
   onCrosshairMove?: (param: any) => void;
   onVisibleRangeChange?: (range: any) => void;
+  onDataUpdate?: (data: CandlestickData[]) => void;
+  onError?: (error: Error) => void;
   className?: string;
   style?: React.CSSProperties;
+  loading?: boolean;
+  height?: number;
+  enableRealtime?: boolean;
+  realTimeInterval?: number; // 毫秒
 }
 
 // API查询参数
