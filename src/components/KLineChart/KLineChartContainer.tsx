@@ -235,10 +235,12 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
           top: isFullscreen ? 0 : 'auto',
           left: isFullscreen ? 0 : 'auto',
           width: isFullscreen ? '100vw' : '100%',
-          height: isFullscreen ? '100vh' : 'auto',
+          height: isFullscreen ? '100vh' : '100%',
           zIndex: isFullscreen ? 1300 : 'auto',
           backgroundColor: currentTheme.background,
           color: currentTheme.textColor,
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {/* 工具栏 */}
@@ -348,7 +350,12 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
         )}
 
         {/* 图表内容 */}
-        <Box sx={{ position: 'relative' }}>
+        <Box sx={{ 
+          position: 'relative', 
+          flex: 1, 
+          minHeight: 0,
+          overflow: 'hidden'
+        }}>
           {error && (
             <Alert 
               severity="error" 
@@ -376,8 +383,8 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
               initialData={chartData}
               config={chartConfig}
               loading={loading}
-              height={isFullscreen ? window.innerHeight - (showControls ? 48 : 0) : height}
               onError={(err) => setError(err.message)}
+              onClose={onClose}
             />
           )}
         </Box>

@@ -54,6 +54,7 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
   onVisibleRangeChange,
   onDataUpdate,
   onError,
+  onClose,
   className = '',
   style = {},
   loading = false,
@@ -91,7 +92,7 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
   // 创建图表配置
   const chartOptions = useMemo(() => {
     const baseOptions = {
-      width: chartContainerRef.current?.clientWidth || mergedConfig.width,
+      width: mergedConfig.width,
       height: height,
       layout: {
         background: { type: ColorType.Solid, color: theme.background },
@@ -388,11 +389,28 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
     }
   }, [initialData]);
 
-  // 响应式监听
+  // 响应式监听 - 使用ResizeObserver
   useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [handleResize]);
+    if (!chartContainerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (chartRef.current) {
+          const { width, height } = entry.contentRect;
+          chartRef.current.applyOptions({
+            width: width,
+            height: height,
+          });
+        }
+      }
+    });
+
+    resizeObserver.observe(chartContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   // 实时数据（如果启用）
   useEffect(() => {
@@ -459,22 +477,54 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
   return (
     <div 
       className={`kline-chart-container ${className}`}
-      style={style}
+      style={{ ...style, width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
     >
       {/* 图表标题 */}
       {(stockCode || stockName) && (
         <div 
           className="chart-header"
           style={{
-            padding: '10px',
-            backgroundColor: theme.background,
-            color: theme.textColor,
-            borderBottom: `1px solid ${theme.borderColor}`
+            padding: '20px 24px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: '#ffffff',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
           }}
         >
-          <h3 style={{ margin: 0, fontSize: '16px' }}>
-            {stockName} ({stockCode})
-          </h3>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>
+              {stockName} ({stockCode})
+            </h3>
+            <p style={{ margin: 0, fontSize: '13px', opacity: 0.9 }}>
+              K线图分析
+            </p>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                color: '#ffffff',
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                fontWeight: 500
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              关闭
+            </button>
+          )}
         </div>
       )}
       
@@ -484,8 +534,9 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
         className="chart-wrapper"
         style={{ 
           width: '100%', 
-          height: (stockCode || stockName) ? height - 50 : height,
-          position: 'relative'
+          flex: 1,
+          position: 'relative',
+          minHeight: 0  // 允许flex子元素收缩
         }}
       >
         {/* 悬停信息框 */}

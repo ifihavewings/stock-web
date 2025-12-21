@@ -684,18 +684,35 @@ export default function MarketPage() {
             left: 0,
             width: '100vw',
             height: '100vh',
-            backgroundColor: 'white',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(4px)',
             zIndex: 2000,
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            boxSizing: 'border-box',
           }}
+          onClick={handleCloseKlineChart}
         >
-          {/* K线图内容区域 - 直接全屏显示 */}
-          <Box sx={{ flex: 1, height: '100vh' }}>
+          {/* K线图卡片容器 */}
+          <Box 
+            sx={{ 
+              width: '100%',
+              height: '100%',
+              maxWidth: '1600px',
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <KLineChartContainer
               stockCode={selectedStock.stockCode}
               stockName={selectedStock.company?.stockSymbol}
-              height={window.innerHeight}
               showControls={true}
               autoLoad={true}
               defaultTimeRange="6M"

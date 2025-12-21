@@ -175,6 +175,7 @@ export interface KLineChartProps {
   onVisibleRangeChange?: (range: any) => void;
   onDataUpdate?: (data: CandlestickData[]) => void;
   onError?: (error: Error) => void;
+  onClose?: () => void;
   className?: string;
   style?: React.CSSProperties;
   loading?: boolean;
