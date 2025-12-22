@@ -133,7 +133,11 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       },
       localization: {
         locale: mergedConfig.locale,
-        timeFormatter: (time: number) => {
+        timeFormatter: (time: string | number) => {
+          // time 可能是字符串 "2024-01-01" 或 Unix 时间戳
+          if (typeof time === 'string') {
+            return new Date(time).toLocaleDateString('zh-CN');
+          }
           return new Date(time * 1000).toLocaleDateString('zh-CN');
         },
       },
