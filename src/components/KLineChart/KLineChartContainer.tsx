@@ -80,12 +80,9 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
   const [chartData, setChartData] = useState<CandlestickData[]>([]);
   const [currentPeriod, setCurrentPeriod] = useState<KLinePeriod>('day'); // 当前周期
   const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false); // 加载更多数据的状态
-  const [isLoadingMoreRef] = useState({ current: false }); // 防止重复加载
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [configPanelOpen, setConfigPanelOpen] = useState(false);
-  const [selectedTimeRange, setSelectedTimeRange] = useState(defaultTimeRange);
   const [stockInfo, setStockInfo] = useState<any>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
@@ -107,25 +104,7 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
     ]
   });
 
-  // 计算日期范围
-  const getDateRange = useCallback((timeRange: string) => {
-    const now = new Date();
-    const rangeConfig = TIME_RANGES[timeRange as keyof typeof TIME_RANGES];
-    
-    if (!rangeConfig.days) {
-      return { startDate: undefined, endDate: undefined };
-    }
-
-    const startDate = new Date(now);
-    startDate.setDate(startDate.getDate() - rangeConfig.days);
-
-    return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: now.toISOString().split('T')[0]
-    };
-  }, []);
-
-  // 加载数据
+  // 加载数据（一次性加载15年全部历史数据）
   const loadData = useCallback(async (showLoading = true) => {
     if (!stockCode) return;
 
@@ -135,17 +114,25 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
     setError(null);
 
     try {
-      const { startDate, endDate } = getDateRange(selectedTimeRange);
+      // 计算15年前的日期
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setFullYear(startDate.getFullYear() - 15);
       
       const result = await klineDataService.getAdvancedKLineData({
         stockCodeLike: stockCode,
-        startDate: startDate,
-        endDate: endDate,
-        pageSize: 1000
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        pageSize: 100000, // 足够大的数量，确保获取该股票所有历史数据
+        sortField: 'tradingDate', // 按交易日期字段排序
+        sortDirection: 'ASC' // 升序排列，从最早到最新
       });
 
+      console.log(`📊 加载K线数据: ${result.candlestickData.length}条`);
+      console.log(`📅 数据时间范围: ${result.candlestickData[0]?.time} 至 ${result.candlestickData[result.candlestickData.length - 1]?.time}`);
+
       if (result.candlestickData.length === 0) {
-        throw new Error('未找到数据，请检查股票代码或时间范围');
+        throw new Error('未找到数据，请检查股票代码');
       }
 
       // 保存原始日K数据
@@ -163,80 +150,7 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [stockCode, selectedTimeRange, getDateRange]);
-
-  // 加载更多历史数据（向前100条）
-  const loadMoreData = useCallback(async () => {
-    if (!stockCode || rawDailyData.length === 0 || isLoadingMoreRef.current || loadingMore) {
-      return;
-    }
-
-    // 获取当前最早的数据日期
-    const earliestDate = rawDailyData[0]?.time;
-    if (!earliestDate) return;
-
-    isLoadingMoreRef.current = true;
-    setLoadingMore(true);
-
-    try {
-      // 计算请求的日期范围（向前推100个交易日，实际可能需要更长时间跨度）
-      const endDate = new Date(earliestDate);
-      endDate.setDate(endDate.getDate() - 1); // 前一天
-      const startDate = new Date(endDate);
-      startDate.setFullYear(startDate.getFullYear() - 1); // 向前推1年确保有足够数据
-
-      const result = await klineDataService.getAdvancedKLineData({
-        stockCodeLike: stockCode,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        pageSize: 100, // 只请求100条
-        sortField: 'trade_date',
-        sortDirection: 'DESC'
-      });
-
-      if (result.candlestickData.length > 0) {
-        // 过滤掉已存在的数据（防止重复）
-        const existingDates = new Set(rawDailyData.map(d => d.time));
-        const newData = result.candlestickData.filter(d => !existingDates.has(d.time));
-        
-        if (newData.length === 0) {
-          console.log('没有更多历史数据');
-          return;
-        }
-        
-        // 合并数据并按时间升序排序
-        const updatedDailyData = [...newData, ...rawDailyData].sort((a, b) => {
-          return new Date(a.time).getTime() - new Date(b.time).getTime();
-        });
-        
-        setRawDailyData(updatedDailyData);
-        
-        // 根据当前周期转换数据
-        const convertedData = KLinePeriodConverter.convertByPeriod(updatedDailyData, currentPeriod);
-        setChartData(convertedData);
-
-        console.log(`加载了 ${newData.length} 条历史数据，最早日期: ${updatedDailyData[0]?.time}`);
-      }
-    } catch (err) {
-      console.error('加载更多数据失败:', err);
-    } finally {
-      setLoadingMore(false);
-      // 延迟重置标志，避免频繁加载
-      setTimeout(() => {
-        isLoadingMoreRef.current = false;
-      }, 1000);
-    }
-  }, [stockCode, rawDailyData, currentPeriod, loadingMore]);
-
-  // 处理可见范围变化，检测是否需要加载更多数据
-  const handleVisibleRangeChange = useCallback((range: any) => {
-    if (!range || typeof range.from !== 'number') return;
-    
-    // 当滚动到接近最左边时（前10条数据可见），加载更多
-    if (range.from < 10) {
-      loadMoreData();
-    }
-  }, [loadMoreData]);
+  }, [stockCode, currentPeriod]);
 
   // 自动加载数据
   useEffect(() => {
@@ -244,13 +158,6 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
       loadData();
     }
   }, [autoLoad, stockCode, loadData]);
-
-  // 时间范围变化时重新加载
-  useEffect(() => {
-    if (stockCode && chartData.length > 0) {
-      loadData(false);
-    }
-  }, [selectedTimeRange]);
 
   // 全屏切换
   const toggleFullscreen = useCallback(() => {
@@ -277,12 +184,12 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `${stockCode}_kline_${selectedTimeRange}.csv`);
+    link.setAttribute('download', `${stockCode}_kline_all.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [chartData, stockCode, selectedTimeRange]);
+  }, [chartData, stockCode]);
 
   // 显示的股票标题
   const displayTitle = useMemo(() => {
@@ -384,23 +291,6 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
 
             {/* 右侧控制 */}
             <Stack direction="row" spacing={1} alignItems="center">
-              {/* 时间范围选择 */}
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>时间范围</InputLabel>
-                <Select
-                  value={selectedTimeRange}
-                  label="时间范围"
-                  onChange={(e) => setSelectedTimeRange(e.target.value)}
-                  disabled={loading}
-                >
-                  {Object.entries(TIME_RANGES).map(([key, config]) => (
-                    <MenuItem key={key} value={key}>
-                      {config.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
               {/* 操作按钮 */}
               <Tooltip title="刷新数据">
                 <IconButton 
@@ -483,29 +373,6 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
             </Backdrop>
           )}
 
-          {/* 加载更多历史数据提示 */}
-          {loadingMore && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 16,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 2,
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}
-            >
-              <CircularProgress size={16} sx={{ color: 'white' }} />
-              <Typography variant="caption">正在加载更多历史数据...</Typography>
-            </Box>
-          )}
-
           {!error && (
             <AdvancedKLineChart
               stockCode={stockCode}
@@ -515,7 +382,6 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
               loading={loading}
               onError={(err) => setError(err.message)}
               onClose={onClose}
-              onVisibleRangeChange={handleVisibleRangeChange}
             />
           )}
         </Box>
