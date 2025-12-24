@@ -105,12 +105,12 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
-          width: 1,
+          width: 1 as const,
           color: theme.crosshairColor,
           style: 0,
         },
         horzLine: {
-          width: 1,
+          width: 1 as const,
           color: theme.crosshairColor,
           style: 0,
         },
@@ -164,10 +164,6 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       color: theme.volumeUpColor,
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
-      scaleMargins: {
-        top: 0.7,
-        bottom: 0,
-      },
     };
   }, [theme]);
 
@@ -218,7 +214,16 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
       chart.subscribeCrosshairMove((param) => {
         if (param.time && candlestickSeriesRef.current) {
           // 从原始数据中查找完整的数据，包含额外字段
-          const timeStr = typeof param.time === 'string' ? param.time : new Date(param.time * 1000).toISOString().split('T')[0];
+          let timeStr: string;
+          if (typeof param.time === 'string') {
+            timeStr = param.time;
+          } else if (typeof param.time === 'number') {
+            timeStr = new Date(param.time * 1000).toISOString().split('T')[0];
+          } else {
+            // Handle BusinessDay type { year, month, day }
+            const bd = param.time as { year: number; month: number; day: number };
+            timeStr = `${bd.year}-${String(bd.month).padStart(2, '0')}-${String(bd.day).padStart(2, '0')}`;
+          }
           const fullData = chartData.find(item => item.time === timeStr);
           
           if (fullData) {
@@ -357,7 +362,7 @@ export const AdvancedKLineChart: React.FC<KLineChartProps> = ({
 
     const seriesOptions: LineSeriesPartialOptions = {
       color: indicator.color,
-      lineWidth: indicator.lineWidth,
+      lineWidth: indicator.lineWidth as 1 | 2 | 3 | 4,
       title: indicator.name,
       priceScaleId: indicator.type === 'oscillator' ? `oscillator_${indicator.id}` : 'right',
     };

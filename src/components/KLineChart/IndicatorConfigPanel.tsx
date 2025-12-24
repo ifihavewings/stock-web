@@ -141,11 +141,11 @@ export const IndicatorConfigPanel: React.FC<IndicatorConfigPanelProps> = ({
       // 添加新指标
       const template = INDICATOR_TEMPLATES[templateId];
       if (template) {
-        const newIndicator: TechnicalIndicator = {
+        const newIndicator = {
           ...template,
           enabled: true,
           visible: true
-        };
+        } as TechnicalIndicator;
         onConfigChange({ 
           ...config, 
           indicators: [...indicators, newIndicator]
@@ -178,7 +178,7 @@ export const IndicatorConfigPanel: React.FC<IndicatorConfigPanelProps> = ({
       return indicator;
     });
     
-    onConfigChange({ ...config, indicators: newIndicators });
+    onConfigChange({ ...config, indicators: newIndicators as TechnicalIndicator[] });
   }, [config, onConfigChange]);
 
   // 删除指标
@@ -205,7 +205,7 @@ export const IndicatorConfigPanel: React.FC<IndicatorConfigPanelProps> = ({
       return indicator;
     });
     
-    onConfigChange({ ...config, indicators: newIndicators });
+    onConfigChange({ ...config, indicators: newIndicators as TechnicalIndicator[] });
   }, [config, onConfigChange]);
 
   // 检查指标是否启用
@@ -220,12 +220,12 @@ export const IndicatorConfigPanel: React.FC<IndicatorConfigPanelProps> = ({
 
   // 渲染指标参数配置
   const renderIndicatorParams = (indicator: TechnicalIndicator) => {
-    const params = indicator.params;
+    const params = indicator.params as Record<string, any>;
     
     return (
       <Box sx={{ mt: 2 }}>
         {/* 通用参数 */}
-        {params.period !== undefined && (
+        {'period' in params && params.period !== undefined && (
           <TextField
             label="周期"
             type="number"

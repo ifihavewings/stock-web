@@ -71,7 +71,16 @@ export interface BollingerBandsConfig extends IndicatorConfig {
   };
 }
 
-export type TechnicalIndicator = MovingAverageConfig | RSIConfig | MACDConfig | BollingerBandsConfig;
+export interface KDJConfig extends IndicatorConfig {
+  type: 'oscillator';
+  params: {
+    kPeriod: number;
+    dPeriod: number;
+    jPeriod: number;
+  };
+}
+
+export type TechnicalIndicator = MovingAverageConfig | RSIConfig | MACDConfig | BollingerBandsConfig | KDJConfig;
 
 // LightweightCharts所需的K线数据格式
 export interface CandlestickData {

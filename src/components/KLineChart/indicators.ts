@@ -46,7 +46,8 @@ export class TechnicalIndicators {
       
       // 后续值使用EMA公式
       for (let i = period; i < data.length; i++) {
-        const emaValue = ((data[i][source] as number) - result[result.length - 1].value) * multiplier + result[result.length - 1].value;
+        const prevValue = result[result.length - 1].value as number;
+        const emaValue = ((data[i][source] as number) - prevValue) * multiplier + prevValue;
         result.push({
           time: data[i].time,
           value: emaValue
@@ -111,8 +112,8 @@ export class TechnicalIndicators {
     const startIndex = Math.max(0, slowPeriod - fastPeriod);
     
     for (let i = 0; i < fastEMA.length - startIndex; i++) {
-      const fastValue = fastEMA[i + startIndex]?.value || 0;
-      const slowValue = slowEMA[i]?.value || 0;
+      const fastValue = (fastEMA[i + startIndex]?.value || 0) as number;
+      const slowValue = (slowEMA[i]?.value || 0) as number;
       
       macdLine.push({
         time: slowEMA[i].time,
@@ -127,7 +128,7 @@ export class TechnicalIndicators {
       
       // 第一个信号线值
       const firstSignalValue = macdLine.slice(0, signalPeriod)
-        .reduce((sum, item) => sum + item.value, 0) / signalPeriod;
+        .reduce((sum, item) => sum + (item.value as number), 0) / signalPeriod;
       
       signalLine.push({
         time: macdLine[signalPeriod - 1].time,
@@ -136,7 +137,9 @@ export class TechnicalIndicators {
       
       // 后续信号线值
       for (let i = signalPeriod; i < macdLine.length; i++) {
-        const signalValue = (macdLine[i].value - signalLine[signalLine.length - 1].value) * multiplier + signalLine[signalLine.length - 1].value;
+        const currMacd = macdLine[i].value as number;
+        const prevSignal = signalLine[signalLine.length - 1].value as number;
+        const signalValue = (currMacd - prevSignal) * multiplier + prevSignal;
         signalLine.push({
           time: macdLine[i].time,
           value: signalValue
@@ -149,10 +152,13 @@ export class TechnicalIndicators {
     const signalStartIndex = signalPeriod - 1;
     
     for (let i = 0; i < signalLine.length; i++) {
+      const macdVal = macdLine[i + signalStartIndex].value as number;
+      const signalVal = signalLine[i].value as number;
+      const histValue = macdVal - signalVal;
       histogram.push({
         time: signalLine[i].time,
-        value: macdLine[i + signalStartIndex].value - signalLine[i].value,
-        color: macdLine[i + signalStartIndex].value - signalLine[i].value >= 0 ? '#26a69a' : '#ef5350'
+        value: histValue,
+        color: histValue >= 0 ? '#26a69a' : '#ef5350'
       });
     }
     
@@ -249,24 +255,25 @@ export class TechnicalIndicators {
    * @param indicator 指标配置
    */
   static calculateIndicator(data: CandlestickData[], indicator: TechnicalIndicator): IndicatorData[] | { [key: string]: IndicatorData[] } {
+    const params = indicator.params as Record<string, any>;
     switch (indicator.id.toLowerCase()) {
       case 'sma':
-        return this.calculateSMA(data, indicator.params.period, indicator.params.source);
+        return this.calculateSMA(data, params.period, params.source);
       
       case 'ema':
-        return this.calculateEMA(data, indicator.params.period, indicator.params.source);
+        return this.calculateEMA(data, params.period, params.source);
       
       case 'rsi':
-        return this.calculateRSI(data, indicator.params.period);
+        return this.calculateRSI(data, params.period);
       
       case 'macd':
-        return this.calculateMACD(data, indicator.params.fastPeriod, indicator.params.slowPeriod, indicator.params.signalPeriod);
+        return this.calculateMACD(data, params.fastPeriod, params.slowPeriod, params.signalPeriod);
       
       case 'bollinger':
-        return this.calculateBollingerBands(data, indicator.params.period, indicator.params.stdDev);
+        return this.calculateBollingerBands(data, params.period, params.stdDev);
       
       case 'kdj':
-        return this.calculateKDJ(data, indicator.params.kPeriod, indicator.params.dPeriod, indicator.params.jPeriod);
+        return this.calculateKDJ(data, params.kPeriod, params.dPeriod, params.jPeriod);
       
       default:
         console.warn(`Unsupported indicator: ${indicator.id}`);

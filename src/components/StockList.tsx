@@ -2,15 +2,13 @@ import { DataGrid, GridColDef, GridActionsCellItem, GridRenderCellParams, GridRo
 import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import { useState, useEffect } from 'react';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { favoriteStock } from '@/app/apis/companies';
-import { useRouter } from 'next/navigation';
+import { KLineChartContainer } from '@/components/KLineChart/KLineChartContainer';
 
 // 定义股票数据类型
 interface StockData {
@@ -45,11 +43,14 @@ interface StockListProps {
 
 export default function StockList(props: StockListProps) {
     const { tableData, pagination, loading = false, onPageChange } = props;
-    const router = useRouter();
 
     // 收藏状态管理 - 使用Map存储股票代码和收藏状态的映射
     const [favorites, setFavorites] = useState<Map<string, number>>(new Map());
     const [favoriteLoading, setFavoriteLoading] = useState<Set<string>>(new Set());
+    
+    // K线图弹窗状态
+    const [klineDialogOpen, setKlineDialogOpen] = useState(false);
+    const [selectedStock, setSelectedStock] = useState<StockData | null>(null);
 
     // 初始化收藏状态
     useEffect(() => {
@@ -77,14 +78,17 @@ export default function StockList(props: StockListProps) {
         return 'default';
     };
 
-    // 操作处理函数
-    const handleView = (stockCode: string) => console.log('查看:', stockCode);
-    const handleAnalyze = (stockCode: string) => {
-        // 跳转到股票分析页面
-        router.push(`/stock-analysis/${stockCode}`);
+    // 打开K线图弹窗
+    const handleOpenKlineChart = (stock: StockData) => {
+        setSelectedStock(stock);
+        setKlineDialogOpen(true);
     };
-    const handleEdit = (stockCode: string) => console.log('编辑:', stockCode);
-    const handleDelete = (stockCode: string) => console.log('删除:', stockCode);
+
+    // 关闭K线图弹窗
+    const handleCloseKlineChart = () => {
+        setKlineDialogOpen(false);
+        setSelectedStock(null);
+    };
     
     // 收藏处理函数
     const handleFavorite = async (stockCode: string) => {
@@ -214,7 +218,7 @@ export default function StockList(props: StockListProps) {
             field: 'actions',
             type: 'actions',
             headerName: '操作',
-            width: 220, // 增加宽度以容纳新按钮
+            width: 120,
             getActions: (params: GridRowParams) => [
                 <GridActionsCellItem
                     key="favorite"
@@ -227,16 +231,10 @@ export default function StockList(props: StockListProps) {
                     disabled={favoriteLoading.has(params.row.stockCode)}
                 />,
                 <GridActionsCellItem
-                    key="view"
-                    icon={<VisibilityIcon />}
-                    label="查看详情"
-                    onClick={() => handleView(params.row.stockCode)}
-                />,
-                <GridActionsCellItem
-                    key="analyze"
+                    key="kline"
                     icon={<TrendingUpIcon />}
-                    label="股票分析"
-                    onClick={() => handleAnalyze(params.row.stockCode)}
+                    label="K线图"
+                    onClick={() => handleOpenKlineChart(params.row as StockData)}
                 />,
             ],
         },
@@ -263,8 +261,9 @@ export default function StockList(props: StockListProps) {
     }
 
     return (
-        <Paper sx={{ height: 600, width: '100%' }}>
-            <DataGrid
+        <Box>
+            <Paper sx={{ height: 600, width: '100%' }}>
+                <DataGrid
                 rows={rows}
                 columns={columns}
                 paginationMode="server" // 启用服务器端分页
@@ -310,6 +309,54 @@ export default function StockList(props: StockListProps) {
                     },
                 }}
             />
-        </Paper>
+            </Paper>
+
+            {/* 全屏K线图弹窗 */}
+            {klineDialogOpen && selectedStock && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 2000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '24px',
+                        boxSizing: 'border-box',
+                    }}
+                    onClick={handleCloseKlineChart}
+                >
+                    {/* K线图卡片容器 */}
+                    <Box 
+                        sx={{ 
+                            width: '100%',
+                            height: '100%',
+                            maxWidth: '1600px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '16px',
+                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <KLineChartContainer
+                            stockCode={selectedStock.stockCode}
+                            stockName={selectedStock.stockSymbol}
+                            showControls={true}
+                            autoLoad={true}
+                            defaultTimeRange="2Y"
+                            onClose={handleCloseKlineChart}
+                        />
+                    </Box>
+                </Box>
+            )}
+        </Box>
     );
 }

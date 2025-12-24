@@ -289,7 +289,7 @@ export default function MarketPage() {
       <Card sx={{ mb: 1.5, flexShrink: 0 }}>
         <CardContent sx={{ py: 1.5 }}>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={2.5}>
+            <Grid size={{ xs: 12, md: 2.5 }}>
               <TextField
                 fullWidth
                 label="搜索股票代码或简称"
@@ -301,7 +301,7 @@ export default function MarketPage() {
               />
             </Grid>
             
-            <Grid item xs={12} md={2.5}>
+            <Grid size={{ xs: 12, md: 2.5 }}>
               <TextField
                 fullWidth
                 label="搜索行业板块"
@@ -313,7 +313,7 @@ export default function MarketPage() {
               />
             </Grid>
             
-            <Grid item xs={12} md={1.5}>
+            <Grid size={{ xs: 12, md: 1.5 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>排序字段</InputLabel>
                 <Select
@@ -330,7 +330,7 @@ export default function MarketPage() {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={1}>
+            <Grid size={{ xs: 12, md: 1 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>方向</InputLabel>
                 <Select
@@ -344,7 +344,7 @@ export default function MarketPage() {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={1}>
+            <Grid size={{ xs: 12, md: 1 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>条数</InputLabel>
                 <Select
@@ -360,7 +360,7 @@ export default function MarketPage() {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={2.5}>
+            <Grid size={{ xs: 12, md: 2.5 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Button 
                   variant="outlined" 
