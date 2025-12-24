@@ -1,7 +1,7 @@
 'use client'
 import { Box, Typography } from "@mui/material"
 import { useState, useEffect, useCallback } from "react"
-import { getFavoriteStocks } from "@/app/apis/companies"
+import { getFavoriteStocks } from "@/apis/companies"
 import FavoriteStockList from "@/components/FavoriteStockList"
 
 // 收藏股票数据类型（包含交易数据）

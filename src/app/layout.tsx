@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import AppShell from "./components/AppShell";
-import { ThemeProvider } from './theme/ThemeProvider'
-import StyledJsxRegistry from './lib/registry'
+import AppShell from "@/components/AppShell";
+import { ThemeProvider } from '@/theme/ThemeProvider'
+import StyledJsxRegistry from '@/lib/registry'
 
 export const metadata: Metadata = {
   title: "STOCK ANALYZE PLATFORM",

@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import { useState } from 'react';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { favoriteStock } from '@/app/apis/companies';
+import { favoriteStock } from '@/apis/companies';
 import { KLineChartContainer } from '@/components/KLineChart/KLineChartContainer';
 
 // 收藏股票数据类型（包含交易数据）

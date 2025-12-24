@@ -2,7 +2,7 @@
 import { Box, TextField } from "@mui/material"
 import { useState, useEffect, useCallback } from "react"
 import styles from './page.module.css'
-import {listCompaniesByIdOrCode, searchCompanies} from "@/app/apis/companies"
+import {listCompaniesByIdOrCode, searchCompanies} from "@/apis/companies"
 import StockList from "@/components/StockList"
 
 // 定义股票数据类型

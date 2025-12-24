@@ -26,7 +26,7 @@ import {
   CircularProgress
 } from '@mui/material'
 import { TrendingUp, TrendingDown, ShowChart, ArrowUpward, ArrowDownward, UnfoldMore, Timeline, Close } from '@mui/icons-material'
-import { queryDailyKLineData } from '@/app/apis/stocks'
+import { queryDailyKLineData } from '@/apis/stocks'
 import { KLineChartContainer } from '@/components/KLineChart/KLineChartContainer'
 
 // 定义股票行情数据类型

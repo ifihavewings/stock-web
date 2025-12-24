@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import { favoriteStock } from '@/app/apis/companies';
+import { favoriteStock } from '@/apis/companies';
 import { KLineChartContainer } from '@/components/KLineChart/KLineChartContainer';
 
 // 定义股票数据类型
