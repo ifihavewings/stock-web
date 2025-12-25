@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { createChart, IChartApi, ISeriesApi, CandlestickData, HistogramData } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, CandlestickData, HistogramData, DeepPartial, ChartOptions } from 'lightweight-charts';
 import { KLineChartProps, KLineChartConfig, DataTransformer, DailyStockData } from './types';
 import './KLineChart.css';
 
-// 默认配置
-const DEFAULT_CONFIG: KLineChartConfig = {
-  theme: 'light',
-  width: 800,
-  height: 400,
+// 默认图表选项（传递给 lightweight-charts）
+const DEFAULT_CHART_OPTIONS: DeepPartial<ChartOptions> = {
   layout: {
     background: { color: '#ffffff' },
     textColor: '#333333',
@@ -45,6 +42,14 @@ const DEFAULT_CONFIG: KLineChartConfig = {
     barSpacing: 8,
     minBarSpacing: 0.5
   }
+};
+
+// 默认配置
+const DEFAULT_CONFIG: KLineChartConfig = {
+  theme: 'light',
+  width: 800,
+  height: 400,
+  chartOptions: DEFAULT_CHART_OPTIONS
 };
 
 // 主题配置
@@ -88,13 +93,13 @@ const KLineChart: React.FC<KLineChartProps> = ({
   symbol,
   initialData = [],
   config = {},
-  showVolume = true,
-  showIndicators = [],
   onCrosshairMove,
   onVisibleRangeChange,
   className = '',
   style = {}
 }) => {
+  // 从 config 中获取 showVolume 设置
+  const showVolume = config.showVolume !== false;
   // Refs
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -117,10 +122,26 @@ const KLineChart: React.FC<KLineChartProps> = ({
   }), [config]);
 
   // 获取主题
-  const theme = useMemo(() => 
-    THEMES[chartConfig.theme || 'light'], 
-    [chartConfig.theme]
-  );
+  const theme = useMemo(() => {
+    const themeValue = chartConfig.theme || 'light';
+    if (typeof themeValue === 'string' && (themeValue === 'light' || themeValue === 'dark')) {
+      return THEMES[themeValue];
+    }
+    // 如果是自定义 ChartTheme 对象，转换为内部格式
+    if (typeof themeValue === 'object') {
+      return {
+        backgroundColor: themeValue.background,
+        textColor: themeValue.textColor,
+        gridColor: themeValue.gridColor,
+        borderColor: themeValue.borderColor,
+        upColor: themeValue.upColor,
+        downColor: themeValue.downColor,
+        volumeUpColor: themeValue.volumeUpColor,
+        volumeDownColor: themeValue.volumeDownColor
+      };
+    }
+    return THEMES['light'];
+  }, [chartConfig.theme]);
 
   /**
    * 初始化图表
@@ -129,11 +150,16 @@ const KLineChart: React.FC<KLineChartProps> = ({
     if (!chartContainerRef.current || chartRef.current) return;
 
     try {
+      // 获取 chartOptions 配置
+      const chartOptions = chartConfig.chartOptions || {};
+      
       // 创建图表实例
       const chart = createChart(chartContainerRef.current, {
-        ...chartConfig,
+        width: chartConfig.width,
+        height: chartConfig.height,
+        ...chartOptions,
         layout: {
-          ...chartConfig.layout,
+          ...(chartOptions.layout || {}),
           background: { color: theme.backgroundColor },
           textColor: theme.textColor
         },
@@ -142,11 +168,11 @@ const KLineChart: React.FC<KLineChartProps> = ({
           horzLines: { color: theme.gridColor, style: 1 }
         },
         rightPriceScale: {
-          ...chartConfig.rightPriceScale,
+          ...(chartOptions.rightPriceScale || {}),
           borderColor: theme.borderColor
         },
         timeScale: {
-          ...chartConfig.timeScale,
+          ...(chartOptions.timeScale || {}),
           borderColor: theme.borderColor
         }
       });
@@ -173,7 +199,11 @@ const KLineChart: React.FC<KLineChartProps> = ({
           priceFormat: {
             type: 'volume'
           },
-          priceScaleId: '',
+          priceScaleId: 'volume'
+        });
+        
+        // 设置成交量价格轴的边距
+        chart.priceScale('volume').applyOptions({
           scaleMargins: {
             top: 0.8,
             bottom: 0

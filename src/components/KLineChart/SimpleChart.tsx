@@ -161,12 +161,14 @@ const SimpleChart: React.FC<KLineChartProps> = ({
 
         // 验证数据有效性
         const validData = chartData.filter(item => {
-          if (chartData[0].hasOwnProperty('open')) {
+          if ('open' in item) {
             // K线数据验证
-            return !isNaN(item.time) && !isNaN(item.open) && !isNaN(item.high) && !isNaN(item.low) && !isNaN(item.close);
+            const kItem = item as { time: number; open: number; high: number; low: number; close: number };
+            return !isNaN(kItem.time) && !isNaN(kItem.open) && !isNaN(kItem.high) && !isNaN(kItem.low) && !isNaN(kItem.close);
           } else {
             // 线性数据验证
-            return !isNaN(item.time) && !isNaN(item.value);
+            const lineItem = item as { time: number; value: number };
+            return !isNaN(lineItem.time) && !isNaN(lineItem.value);
           }
         });
 

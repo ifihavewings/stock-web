@@ -4,7 +4,7 @@ import { menuItems } from '../config/menu.config'
 import { MenuList, MenuItem } from '@mui/material'
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import {clcsx} from 'clsx'
+import {clsx} from 'clsx'
 import styles from './Menu.module.css'
 export default function Menu() {
 

@@ -148,79 +148,6 @@ export async function fetchStockChartData(
   return apiRequest<StockChartDataResponse>(endpoint);
 }
 
-/**
- * 获取股票基本信息和最新价格
- * @param stockCode 股票代码
- * @returns 股票信息
- */
-export async function fetchStockInfo(stockCode: string): Promise<StockInfoResponse> {
-  return apiRequest<StockInfoResponse>(`stock-data-fetcher/${stockCode}/info`);
-}
-
-/**
- * 获取股票统计信息
- * @param stockCode 股票代码
- * @param period 统计周期
- * @returns 统计数据
- */
-export async function fetchStockStats(
-  stockCode: string,
-  period: string = '30d'
-): Promise<StockStatsResponse> {
-  const endpoint = `stock-data-fetcher/${stockCode}/stats?period=${period}`;
-  return apiRequest<StockStatsResponse>(endpoint);
-}
-
-/**
- * 获取简单K线数据（向后兼容）
- * @param stockCode 股票代码
- * @param limit 数据条数
- * @returns K线数据
- */
-export async function fetchKlineData(
-  stockCode: string,
-  limit: number = 30
-): Promise<any[]> {
-  const response = await apiRequest<any[]>(`stock-data-fetcher/kline/${stockCode}?limit=${limit}`);
-  return response;
-}
-
-/**
- * 获取股票最新数据
- * @param stockCode 股票代码
- * @returns 最新数据
- */
-export async function fetchLatestStockData(stockCode: string): Promise<DailyStockData | null> {
-  return apiRequest<DailyStockData | null>(`stock-data-fetcher/latest/${stockCode}`);
-}
-
-/**
- * 触发股票数据获取（收藏时调用）
- * @param stockCode 股票代码
- * @param days 获取天数
- * @returns 操作结果
- */
-export async function triggerStockDataFetch(
-  stockCode: string,
-  days?: number
-): Promise<{
-  success: boolean;
-  message: string;
-  dataCount: number;
-}> {
-  const endpoint = `stock-data-fetcher/fetch/${stockCode}${
-    days ? `?days=${days}` : ''
-  }`;
-  
-  return apiRequest<{
-    success: boolean;
-    message: string;
-    dataCount: number;
-  }>(endpoint, {
-    method: 'POST',
-  });
-}
-
 // 辅助函数：处理日期范围
 export function getDateRange(period: string): {
   startDate: string;
@@ -273,11 +200,6 @@ export function transformToKLineData(data: DailyStockData[]): Array<{
 
 export default {
   fetchStockChartData,
-  fetchStockInfo,
-  fetchStockStats,
-  fetchKlineData,
-  fetchLatestStockData,
-  triggerStockDataFetch,
   getDateRange,
   transformToKLineData,
 };

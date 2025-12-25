@@ -19,6 +19,5 @@ export function favoriteStock(stockCode: string) {
 
 // 获取收藏的股票列表
 export function getFavoriteStocks(params?: Record<string, any>) {
-  debugger
   return get(`${prefix}/favorites`, params)
 }

@@ -98,9 +98,9 @@ export const KLineChartContainer: React.FC<KLineChartContainerProps> = ({
     rightOffset: 20,
     indicators: [
       // 默认启用一些基础指标
-      { ...INDICATOR_TEMPLATES.sma20, enabled: true, visible: true },
-      { ...INDICATOR_TEMPLATES.ema12, enabled: false, visible: false },
-      { ...INDICATOR_TEMPLATES.rsi14, enabled: false, visible: false },
+      { ...INDICATOR_TEMPLATES.sma20, enabled: true, visible: true } as TechnicalIndicator,
+      { ...INDICATOR_TEMPLATES.ema12, enabled: false, visible: false } as TechnicalIndicator,
+      { ...INDICATOR_TEMPLATES.rsi14, enabled: false, visible: false } as TechnicalIndicator,
     ]
   });
 

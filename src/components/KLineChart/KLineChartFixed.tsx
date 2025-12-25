@@ -128,9 +128,9 @@ const KLineChartFixed: React.FC<KLineChartProps> = ({
 
         console.log('Candlestick series created:', !!candlestickSeries);
 
-        // 转换数据格式
+        // 转换数据格式 - 使用 ISO 日期字符串格式
         const chartData = stockData.map(item => ({
-          time: Math.floor(new Date(item.tradeDate).getTime() / 1000),
+          time: new Date(item.tradeDate).toISOString().split('T')[0] as string,
           open: item.openPrice,
           high: item.highPrice,
           low: item.lowPrice,
@@ -140,7 +140,7 @@ const KLineChartFixed: React.FC<KLineChartProps> = ({
         console.log('Chart data:', chartData.slice(0, 3));
 
         // 设置数据
-        candlestickSeries.setData(chartData);
+        candlestickSeries.setData(chartData as any);
 
         // 响应式处理
         const handleResize = () => {

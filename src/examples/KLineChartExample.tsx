@@ -60,10 +60,12 @@ const KLineChartExample: React.FC = () => {
   const chartConfig: KLineChartConfig = {
     ...CHART_PRESETS[preset],
     theme,
-    layout: {
-      ...CHART_PRESETS[preset].layout,
-      background: { color: theme === 'dark' ? '#1e1e1e' : '#ffffff' },
-      textColor: theme === 'dark' ? '#d1d4dc' : '#333333'
+    showVolume,
+    chartOptions: {
+      layout: {
+        background: { color: theme === 'dark' ? '#1e1e1e' : '#ffffff' },
+        textColor: theme === 'dark' ? '#d1d4dc' : '#333333'
+      }
     }
   };
 
@@ -186,15 +188,18 @@ const KLineChartExample: React.FC = () => {
           {crosshairData.seriesData.size > 0 && (
             <div style={{ marginTop: '8px' }}>
               <span>时间: {crosshairData.time} | </span>
-              {Array.from(crosshairData.seriesData.entries()).map(([series, data], index) => (
-                <span key={index}>
-                  开: {data.open?.toFixed(2)} | 
-                  高: {data.high?.toFixed(2)} | 
-                  低: {data.low?.toFixed(2)} | 
-                  收: {data.close?.toFixed(2)}
-                  {data.value && ` | 量: ${(data.value / 10000).toFixed(0)}万`}
-                </span>
-              ))}
+              {(() => {
+                const entries = Array.from(crosshairData.seriesData.entries()) as Array<[unknown, { open?: number; high?: number; low?: number; close?: number; value?: number }]>;
+                return entries.map(([series, data], index) => (
+                  <span key={index}>
+                    开: {data.open?.toFixed(2)} | 
+                    高: {data.high?.toFixed(2)} | 
+                    低: {data.low?.toFixed(2)} | 
+                    收: {data.close?.toFixed(2)}
+                    {data.value && ` | 量: ${(data.value / 10000).toFixed(0)}万`}
+                  </span>
+                ));
+              })()}
             </div>
           )}
         </div>
@@ -206,7 +211,6 @@ const KLineChartExample: React.FC = () => {
           stockCode={stockCode}
           symbol={`${getStockName(stockCode)} (${stockCode})`}
           config={chartConfig}
-          showVolume={showVolume}
           onCrosshairMove={handleCrosshairMove}
           onVisibleRangeChange={handleVisibleRangeChange}
           style={{
